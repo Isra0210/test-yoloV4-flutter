@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:isolate';
 
 import 'package:camera/camera.dart';
@@ -8,25 +7,23 @@ import 'package:object_detection/tflite/recognition.dart';
 import 'package:object_detection/tflite/stats.dart';
 import 'package:object_detection/ui/camera_view_singleton.dart';
 import 'package:object_detection/utils/isolate_utils.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-/// [CameraView] sends each frame for inference
 class CameraView extends StatefulWidget {
-  /// Callback to pass results after inference to [HomeView]
   final Function(List<Recognition> recognitions) resultsCallback;
+  final List<CameraDescription> cameras;
 
   /// Callback to inference stats to [HomeView]
   final Function(Stats stats) statsCallback;
 
   /// Constructor
-  const CameraView(this.resultsCallback, this.statsCallback);
+  const CameraView(this.resultsCallback, this.statsCallback, this.cameras);
+
   @override
   _CameraViewState createState() => _CameraViewState();
 }
 
 class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
-  /// List of available cameras
-  List<CameraDescription> cameras;
-
   /// Controller
   CameraController cameraController;
 
@@ -34,10 +31,19 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   bool predicting;
 
   /// Instance of [Classifier]
-  Classifier classifier;
+  // Classifier classifier;
+  Classifier classifier; 
 
   /// Instance of [IsolateUtils]
   IsolateUtils isolateUtils;
+
+  Future verifyCamera() async {
+    var status = await Permission.camera.status;
+    if (status.isDenied) {
+      print("===> Access Denied");
+      // We didn't ask for permission yet or the permission has been denied before but not permanently.
+    }
+  }
 
   @override
   void initState() {
@@ -64,11 +70,12 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
   /// Initializes the camera by setting [cameraController]
   void initializeCamera() async {
-    cameras = await availableCameras();
+    // cameras = await availableCameras();
 
     // cameras[0] for rear-camera
-    cameraController =
-        CameraController(cameras[0], ResolutionPreset.low, enableAudio: false);
+    cameraController = CameraController(
+        widget.cameras[0], ResolutionPreset.veryHigh,
+        enableAudio: false);
 
     cameraController.initialize().then((_) async {
       // Stream of image passed to [onLatestImageAvailable] callback
@@ -81,7 +88,6 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
       /// previewSize is size of raw input image to the model
       CameraViewSingleton.inputImageSize = previewSize;
-
       // the display width of image on screen is
       // same as screenWidth while maintaining the aspectRatio
       Size screenSize = MediaQuery.of(context).size;
@@ -97,9 +103,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       return Container();
     }
 
-    return AspectRatio(
-        aspectRatio: cameraController.value.aspectRatio,
-        child: CameraPreview(cameraController));
+    return CameraPreview(cameraController);
   }
 
   /// Callback to receive each frame [CameraImage] perform inference on it

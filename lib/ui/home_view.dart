@@ -1,5 +1,6 @@
-import 'package:flutter/cupertino.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:image/image.dart';
 import 'package:object_detection/tflite/recognition.dart';
 import 'package:object_detection/tflite/stats.dart';
 import 'package:object_detection/ui/box_widget.dart';
@@ -9,6 +10,8 @@ import 'camera_view.dart';
 
 /// [HomeView] stacks [CameraView] and [BoxWidget]s with bottom sheet for stats
 class HomeView extends StatefulWidget {
+  final List<CameraDescription> cameras;
+  const HomeView(this.cameras);
   @override
   _HomeViewState createState() => _HomeViewState();
 }
@@ -27,27 +30,22 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: Stack(
         children: <Widget>[
-          // Camera View
-          CameraView(resultsCallback, statsCallback),
-
-          // Bounding boxes
+          CameraView(resultsCallback, statsCallback, widget.cameras),
           boundingBoxes(results),
-
-          // Heading
           Align(
-            alignment: Alignment.topLeft,
+            alignment: Alignment.topCenter,
             child: Container(
-              padding: EdgeInsets.only(top: 20),
+              padding: EdgeInsets.only(top: 30),
               child: Text(
                 'Object Detection Flutter',
                 textAlign: TextAlign.left,
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: Colors.deepOrangeAccent.withOpacity(0.6),
+                  color: Colors.white.withOpacity(0.6),
                 ),
               ),
             ),
@@ -57,14 +55,12 @@ class _HomeViewState extends State<HomeView> {
           Align(
             alignment: Alignment.bottomCenter,
             child: DraggableScrollableSheet(
-              initialChildSize: 0.4,
-              minChildSize: 0.1,
+              initialChildSize: 0.3,
+              minChildSize: 0.29,
               maxChildSize: 0.5,
               builder: (_, ScrollController scrollController) => Container(
                 width: double.maxFinite,
-                decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
-                    borderRadius: BORDER_RADIUS_BOTTOM_SHEET),
+                color: Colors.white,
                 child: SingleChildScrollView(
                   controller: scrollController,
                   child: Center(
@@ -108,11 +104,7 @@ class _HomeViewState extends State<HomeView> {
       return Container();
     }
     return Stack(
-      children: results
-          .map((e) => BoxWidget(
-                result: e,
-              ))
-          .toList(),
+      children: results.map((e) => BoxWidget(result: e)).toList(),
     );
   }
 

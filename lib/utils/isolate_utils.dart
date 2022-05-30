@@ -11,6 +11,7 @@ import 'package:tflite_flutter/tflite_flutter.dart';
 class IsolateUtils {
   static const String DEBUG_NAME = "InferenceIsolate";
 
+  //ignore: unused_field
   Isolate _isolate;
   ReceivePort _receivePort = ReceivePort();
   SendPort _sendPort;
@@ -34,9 +35,10 @@ class IsolateUtils {
     await for (final IsolateData isolateData in port) {
       if (isolateData != null) {
         Classifier classifier = Classifier(
-            interpreter:
-                Interpreter.fromAddress(isolateData.interpreterAddress),
-            labels: isolateData.labels);
+          interpreter: Interpreter.fromAddress(isolateData.interpreterAddress),
+          labels: isolateData.labels,
+          
+        );
         imageLib.Image image =
             ImageUtils.convertCameraImage(isolateData.cameraImage);
         if (Platform.isAndroid) {
